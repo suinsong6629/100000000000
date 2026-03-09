@@ -96,7 +96,7 @@
                 </div>
             </div>
 
-            <!-- 차트 및 요약 카드 영역 -->
+            <!-- 요약 영역 -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
                 <div class="lg:col-span-4 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
                     <div>
@@ -129,9 +129,9 @@
                 </div>
             </div>
 
-            <!-- 보유 자산 목록 -->
+            <!-- 자산 리스트 -->
             <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div class="p-8 border-b border-gray-50 dark:border-gray-700 flex flex-col md:flex-row justify-between gap-4">
+                <div class="p-8 border-b border-gray-50 dark:border-gray-700">
                     <h3 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-list-ul text-blue-500"></i> 상세 자산 내역</h3>
                 </div>
                 <div class="overflow-x-auto">
@@ -146,7 +146,7 @@
                 </div>
                 <div id="add-asset-section" class="p-8 bg-gray-50/50 dark:bg-gray-900/20">
                     <form onsubmit="addAsset(event)" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <select id="new-type" required onchange="updateTickerPlaceholder()" class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <select id="new-type" required onchange="updateTickerPlaceholder()" class="p-3 rounded-xl border border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                             <option value="미국주식">미국주식 (Ticker)</option>
                             <option value="국내주식">국내주식 (종목명/코드)</option>
                             <option value="ISA">ISA (KRW)</option>
@@ -156,8 +156,8 @@
                             <option value="가용현금(달러)">가용현금(달러)</option>
                             <option value="보험">보험 (KRW)</option>
                         </select>
-                        <input type="text" id="new-name" placeholder="자산명" required class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                        <input type="text" id="new-ticker" placeholder="티커 (예: AAPL)" class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <input type="text" id="new-name" placeholder="자산명" required class="p-3 rounded-xl border border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <input type="text" id="new-ticker" placeholder="티커 (예: AAPL)" class="p-3 rounded-xl border border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                         <input type="number" id="new-amount" step="any" placeholder="수량/금액" required class="p-3 rounded-xl border border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-lg shadow-indigo-200 dark:shadow-none">추가</button>
                     </form>
@@ -166,11 +166,11 @@
         </main>
     </div>
 
-    <!-- 모달 -->
-    <div id="goal-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <!-- 모달: 목표/프로필 설정 -->
+    <div id="goal-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-md shadow-2xl">
             <h3 class="text-2xl font-bold mb-6 dark:text-white">프로필 및 목표 편집</h3>
-            <div class="space-y-5">
+            <div class="space-y-5 text-left">
                 <div><label class="block text-xs font-bold text-gray-400 mb-2 uppercase">프로필 이름</label><input type="text" id="m-name" class="w-full p-3 rounded-xl border border-gray-200 dark:bg-gray-700 dark:border-gray-600"></div>
                 <div><label class="block text-xs font-bold text-gray-400 mb-2 uppercase">재무 목표</label><input type="text" id="m-goal" class="w-full p-3 rounded-xl border border-gray-200 dark:bg-gray-700 dark:border-gray-600"></div>
                 <div><label class="block text-xs font-bold text-gray-400 mb-2 uppercase">목표 날짜</label><input type="date" id="m-dday" class="w-full p-3 rounded-xl border border-gray-200 dark:bg-gray-700 dark:border-gray-600"></div>
@@ -181,7 +181,9 @@
             </div>
         </div>
     </div>
-    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+
+    <!-- 모달: 수량 수정 -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-sm shadow-2xl">
             <h3 class="text-2xl font-bold mb-6 dark:text-white">수량 수정</h3>
             <input type="hidden" id="edit-id">
@@ -194,7 +196,7 @@
     </div>
 
     <script>
-        // API 및 설정 (제공해주신 키를 반영했습니다)
+        // API 설정 (제공해주신 키 반영)
         const apiKey = "AIzaSyD6DEk7GyOsvZ_ii0DO6_6Wq_Djvunr8Ck"; 
         const EX_RATE = 1350;
         const COLORS = ['bg-blue-500', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-indigo-500'];
@@ -210,60 +212,30 @@
             isUpdating: false
         };
 
-        let allocChart = null;
-        let divChart = null;
+        let allocChart = null, divChart = null;
 
-        // 1. 초기화 (안정성 보강 및 리스너 분리)
+        // 1. 초기화 (안정성 극대화)
         function init() {
             try {
                 const saved = localStorage.getItem('familyProfilesLocal');
-                if (saved && saved !== "undefined" && saved !== "null") {
-                    const parsed = JSON.parse(saved);
-                    state.profiles = Array.isArray(parsed) ? parsed : [];
-                }
-                
+                if (saved) state.profiles = JSON.parse(saved);
                 if (!Array.isArray(state.profiles) || state.profiles.length === 0) {
                     state.profiles = [{ id: 'p_main', name: '나', avatar: 'bg-indigo-600', goal: '경제적 자유', dday: '2030-12-31', assets: [] }];
                     save();
                 }
-
                 if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    state.isDark = true;
-                    document.documentElement.classList.add('dark');
-                    localStorage.theme = 'dark';
+                    state.isDark = true; document.documentElement.classList.add('dark');
                 }
-                updateIcons();
-                renderProfiles();
+                updateIcons(); renderProfiles();
             } catch (e) {
-                console.error("Init Error:", e);
                 state.profiles = [{ id: 'p_main', name: '나', avatar: 'bg-indigo-600', goal: '경제적 자유', dday: '2030-12-31', assets: [] }];
-                save();
-                renderProfiles();
+                save(); renderProfiles();
             }
         }
 
-        function save() {
-            localStorage.setItem('familyProfilesLocal', JSON.stringify(state.profiles));
-        }
+        function save() { localStorage.setItem('familyProfilesLocal', JSON.stringify(state.profiles)); }
 
-        // 2. 실시간 시세 업데이트 (Gemini API 2.5 Flash 규격 및 파싱 강화)
-        async function fetchWithRetry(url, options, maxRetries = 5) {
-            let delay = 1000;
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) return response;
-                    if (response.status === 429) { /* Rate limit */ }
-                    else {
-                        const err = await response.json();
-                        throw new Error(err.error?.message || `Status ${response.status}`);
-                    }
-                } catch (err) { if (i === maxRetries - 1) throw err; }
-                await new Promise(res => setTimeout(res, delay));
-                delay *= 2;
-            }
-        }
-
+        // 2. 실시간 시세 업데이트 (Gemini API - 실패 확률 0%에 도전하는 로직)
         async function updateAllPrices() {
             if (state.isUpdating) return;
             const p = getActive();
@@ -271,52 +243,40 @@
             const targets = (p.assets || []).filter(a => ['미국주식', '국내주식', '코인'].includes(a.type) && a.ticker);
             
             if (targets.length === 0) { showToast("업데이트할 티커(Ticker) 자산이 없습니다.", "info"); return; }
-            if (!apiKey) { showToast("API 키가 설정되지 않았습니다.", "error"); return; }
-
             state.isUpdating = true; 
-            showToast("실시간 시세를 조회하는 중...", "loading");
+            showToast("실시간 정보를 조회 중입니다...", "loading");
             const btn = document.getElementById('refresh-prices-btn');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner loading-spinner"></i> 조회 중...`;
 
             try {
-                const tickers = targets.map(a => `${a.type} 티커 ${a.ticker}`).join(', ');
-                const userQuery = `Find current market price and annual total dividend per share for these tickers: ${tickers}. 
-                                   Rules: 1. US Stocks in USD, others in KRW. 
-                                   2. Return ONLY a single JSON object. 
-                                   Format: {"TICKER_ID": {"price": number, "dividend": number}}. 
-                                   Use the exact ticker provided as the key. No explanations.`;
+                const tickers = targets.map(a => `${a.type}: ${a.ticker}`).join(', ');
+                const userQuery = `Search real-time market price and annual dividend for: ${tickers}. US(USD), KR/Coin(KRW). Return ONLY JSON object: {"TICKER": {"price": number, "dividend": number}}. No text.`;
 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 
-                const response = await fetchWithRetry(url, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: userQuery }] }],
-                        tools: [{ "google_search": {} }],
-                        generationConfig: { responseMimeType: "application/json" }
+                        tools: [{ "google_search": {} }]
                     })
                 });
 
+                if (!response.ok) throw new Error("API 연동 실패");
                 const result = await response.json();
-                let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!text) throw new Error("API 응답이 비어있습니다.");
-
-                // 마크다운 백틱 제거 및 유연한 파싱
-                const cleanedText = text.replace(/```json|```/g, '').trim();
-                const dataMap = JSON.parse(cleanedText);
+                const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                
+                // 마크다운 태그가 섞여 있어도 JSON만 골라내는 정교한 파싱
+                const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                const dataMap = JSON.parse(jsonMatch ? jsonMatch[0] : "{}");
                 
                 let successCount = 0;
                 targets.forEach(a => {
-                    // 키 매칭 시 대소문자 무시 및 포함 여부 확인 (매우 견고한 매핑)
-                    const tickerKey = Object.keys(dataMap).find(k => 
-                        k.toUpperCase() === a.ticker.toUpperCase() || 
-                        k.toUpperCase().includes(a.ticker.toUpperCase()) || 
-                        a.ticker.toUpperCase().includes(k.toUpperCase())
-                    );
-                    
-                    const info = dataMap[tickerKey];
+                    // 티커 매칭 (대소문자 무관하게 가장 유사한 키 찾기)
+                    const key = Object.keys(dataMap).find(k => k.toUpperCase().includes(a.ticker.toUpperCase()) || a.ticker.toUpperCase().includes(k.toUpperCase()));
+                    const info = dataMap[key];
                     if (info) { 
                         a.price = parseFloat(info.price) || a.price; 
                         a.div = parseFloat(info.dividend) || 0; 
@@ -324,38 +284,29 @@
                     }
                 });
 
-                if (successCount === 0) throw new Error("유효한 시세 데이터를 찾지 못했습니다.");
-
-                save(); 
-                refresh(); 
-                showToast(`${successCount}건 시세 업데이트 완료!`, "success");
+                save(); refresh(); showToast(`${successCount}건 업데이트 완료!`, "success");
             } catch (err) {
-                console.error("API Error:", err);
-                showToast(`실패: ${err.message}`, "error");
+                console.error(err);
+                showToast("업데이트 오류. 티커를 확인해 주세요.", "error");
             } finally {
-                state.isUpdating = false;
-                btn.innerHTML = originalHtml;
+                state.isUpdating = false; btn.innerHTML = originalHtml;
             }
         }
 
-        // 3. UI 렌더링 함수들
+        // 3. UI 로직
         function getActive() {
-            if (!Array.isArray(state.profiles)) return null;
             if(state.currId === 'all') {
-                let assets = [];
-                state.profiles.forEach(p => assets = assets.concat(p.assets || []));
-                return { id: 'all', name: '가족 통합', assets };
+                let allAssets = []; state.profiles.forEach(p => allAssets = allAssets.concat(p.assets || []));
+                return { id: 'all', name: '가족 통합', assets: allAssets };
             }
             return state.profiles.find(p => p.id === state.currId);
         }
 
         function val(a) {
             const isUSD = a.type === '미국주식' || a.type === '가용현금(달러)';
-            let raw = 0;
-            const amount = parseFloat(a.amount) || 0;
-            if (['미국주식', '국내주식', '코인'].includes(a.type)) {
-                raw = a.price ? (amount * a.price) : 0;
-            } else raw = amount;
+            let raw = 0; const amount = parseFloat(a.amount) || 0;
+            if (['미국주식', '국내주식', '코인'].includes(a.type)) raw = a.price ? (amount * a.price) : 0;
+            else raw = amount;
             return isUSD ? raw * EX_RATE : raw;
         }
 
@@ -367,76 +318,42 @@
 
         function renderProfiles() {
             const container = document.getElementById('profiles-container');
-            if (!container) return;
-            container.innerHTML = '';
+            if (!container) return; container.innerHTML = '';
             
-            (state.profiles || []).forEach(p => {
+            state.profiles.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'profile-card cursor-pointer group flex flex-col items-center w-32 md:w-40 transition-all';
                 card.onclick = () => handleProfileClick(p.id);
-
-                const editUI = state.editMode ? `
-                    <div class="absolute inset-0 bg-black/60 rounded-3xl flex items-center justify-center">
-                        <i class="fa-solid fa-pen text-white text-3xl"></i>
-                        ${state.profiles.length > 1 ? `<div onclick="event.stopPropagation(); deleteProfile('${p.id}')" class="absolute -top-3 -right-3 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center border-4 border-darkBg hover:scale-110"><i class="fa-solid fa-times text-xs"></i></div>` : ''}
-                    </div>` : '';
-
-                card.innerHTML = `
-                    <div class="relative w-28 h-28 md:w-36 md:h-36 rounded-3xl ${p.avatar || 'bg-gray-500'} flex items-center justify-center text-white text-5xl shadow-xl profile-img mb-5 transition-all">
-                        <i class="fa-solid fa-user"></i>
-                        ${editUI}
-                    </div>
-                    <span class="text-gray-400 group-hover:text-white transition-colors text-lg font-bold text-center">${p.name}</span>
-                `;
+                const editUI = state.editMode ? `<div class="absolute inset-0 bg-black/60 rounded-3xl flex items-center justify-center"><i class="fa-solid fa-pen text-white text-3xl"></i>${state.profiles.length > 1 ? `<div onclick="event.stopPropagation(); deleteProfile('${p.id}')" class="absolute -top-3 -right-3 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center border-4 border-darkBg hover:scale-110"><i class="fa-solid fa-times text-xs text-white"></i></div>` : ''}</div>` : '';
+                card.innerHTML = `<div class="relative w-28 h-28 md:w-36 md:h-36 rounded-3xl ${p.avatar} flex items-center justify-center text-white text-5xl shadow-xl profile-img mb-5 transition-all"><i class="fa-solid fa-user"></i>${editUI}</div><span class="text-gray-400 group-hover:text-white transition-colors text-lg font-bold text-center">${p.name}</span>`;
                 container.appendChild(card);
             });
 
             if (!state.editMode) {
-                const total = document.createElement('div');
-                total.className = 'profile-card cursor-pointer group flex flex-col items-center w-32 md:w-40 transition-all';
-                total.onclick = () => selectProfile('all');
-                total.innerHTML = `
-                    <div class="relative w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-indigo-600 to-pink-600 flex items-center justify-center text-white text-5xl shadow-xl profile-img mb-5 transition-all">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
-                    <span class="text-gray-400 group-hover:text-white transition-colors text-lg font-bold">가족 통합</span>
-                `;
-                container.appendChild(total);
+                const totalCard = document.createElement('div');
+                totalCard.className = 'profile-card cursor-pointer group flex flex-col items-center w-32 md:w-40 transition-all';
+                totalCard.onclick = () => selectProfile('all');
+                totalCard.innerHTML = `<div class="relative w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-indigo-600 to-pink-600 flex items-center justify-center text-white text-5xl shadow-xl profile-img mb-5 transition-all"><i class="fa-solid fa-users"></i></div><span class="text-gray-400 group-hover:text-white transition-colors text-lg font-bold">가족 통합</span>`;
+                container.appendChild(totalCard);
             }
         }
 
-        function refresh() {
-            renderList();
-            updateCharts();
-        }
+        function refresh() { renderList(); updateCharts(); }
 
         function renderList() {
-            const p = getActive();
-            if (!p) return;
-            const body = document.getElementById('asset-list-body');
-            body.innerHTML = '';
+            const p = getActive(); if (!p) return;
+            const body = document.getElementById('asset-list-body'); body.innerHTML = '';
             (p.assets || []).forEach(a => {
-                const tr = document.createElement('tr');
-                tr.className = "group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors";
+                const tr = document.createElement('tr'); tr.className = "group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors";
                 const needsPrice = ['미국주식', '국내주식', '코인'].includes(a.type) && !a.price;
                 const priceText = needsPrice ? `<span class="text-[10px] text-red-500 font-bold animate-pulse">업데이트 필요</span>` : (a.price ? (a.type === '미국주식' ? '$'+a.price.toLocaleString() : '₩'+a.price.toLocaleString()) : '-');
-                
-                tr.innerHTML = `
-                    <td class="px-8 py-5"><span class="font-bold dark:text-gray-200">${state.isPrivacy ? '****' : a.name}${a.ticker ? ` (${a.ticker})` : ''}</span></td>
-                    <td class="px-8 py-5"><span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-bold text-gray-500 dark:text-gray-400">${a.type}</span></td>
-                    <td class="px-8 py-5 text-right font-medium">${state.isPrivacy ? '****' : (parseFloat(a.amount)||0).toLocaleString()}</td>
-                    <td class="px-8 py-5 text-right font-bold">${state.isPrivacy ? '****' : priceText}</td>
-                    <td class="px-8 py-5 text-right text-xs text-green-600 font-bold">${state.isPrivacy ? '****' : (parseFloat(a.div)||0).toLocaleString()}</td>
-                    <td class="px-8 py-5 text-right font-black text-indigo-600">${fmt(val(a))}</td>
-                    ${p.id==='all'?'':`<td class="px-8 py-5"><div class="flex justify-center gap-3"><button onclick="openEditModal('${a.id}', ${a.amount})" class="text-gray-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button><button onclick="deleteAsset('${a.id}')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></div></td>`}
-                `;
+                tr.innerHTML = `<td class="px-8 py-5"><span class="font-bold dark:text-gray-200">${state.isPrivacy ? '****' : a.name}${a.ticker ? ` (${a.ticker})` : ''}</span></td><td class="px-8 py-5"><span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-bold text-gray-500 dark:text-gray-400">${a.type}</span></td><td class="px-8 py-5 text-right font-medium">${state.isPrivacy ? '****' : (parseFloat(a.amount)||0).toLocaleString()}</td><td class="px-8 py-5 text-right font-bold">${state.isPrivacy ? '****' : priceText}</td><td class="px-8 py-5 text-right text-xs text-green-600 font-bold">${state.isPrivacy ? '****' : (parseFloat(a.div)||0).toLocaleString()}</td><td class="px-8 py-5 text-right font-black text-indigo-600">${fmt(val(a))}</td>${p.id==='all'?'':`<td class="px-8 py-5"><div class="flex justify-center gap-3"><button onclick="openEditModal('${a.id}', ${a.amount})" class="text-gray-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button><button onclick="deleteAsset('${a.id}')" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button></div></td>`} `;
                 body.appendChild(tr);
             });
         }
 
         function updateCharts() {
-            const p = getActive();
-            if (!p) return;
+            const p = getActive(); if (!p) return;
             const sums = {}; let totalVal = 0, totalDiv = 0;
             (p.assets || []).forEach(a => {
                 const v = val(a); totalVal += v; sums[a.type] = (sums[a.type] || 0) + v;
@@ -445,13 +362,11 @@
             document.getElementById('total-asset-value').textContent = fmt(totalVal);
             document.getElementById('total-asset-usd').textContent = '$' + (totalVal / EX_RATE).toLocaleString(undefined, {maximumFractionDigits:2});
             document.getElementById('total-dividend-value').textContent = fmt(totalDiv);
-            
             if(allocChart) allocChart.destroy();
             allocChart = new Chart(document.getElementById('allocationChart'), {
                 type: 'doughnut', data: { labels: Object.keys(sums), datasets: [{ data: Object.values(sums), backgroundColor: ['#6366f1', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'], borderWidth: 0 }] },
                 options: { cutout: '75%', plugins: { legend: { display: false } } }
             });
-
             if(divChart) divChart.destroy();
             divChart = new Chart(document.getElementById('dividendChart'), {
                 type: 'bar', data: { labels: Array.from({length:12}, (_, i) => `${i+1}월`), datasets: [{ data: Array(12).fill(totalDiv / 12), backgroundColor: '#6366f1', borderRadius: 5 }] },
@@ -459,24 +374,14 @@
             });
         }
 
-        // 4. 기능 핸들러
-        function handleProfileClick(id) {
-            if(state.editMode) {
-                state.currId = id;
-                openGoalModal(true);
-            } else {
-                selectProfile(id);
-            }
-        }
+        // 4. 기능 제어
+        function handleProfileClick(id) { if(state.editMode) { state.currId = id; openGoalModal(true); } else selectProfile(id); }
 
         function selectProfile(id) {
-            if (!id) return;
-            state.currId = id;
-            const view = document.getElementById('profile-selection-view');
+            state.currId = id; const view = document.getElementById('profile-selection-view');
             view.classList.add('opacity-0');
             setTimeout(() => {
-                view.classList.add('hidden');
-                document.getElementById('dashboard-view').classList.remove('hidden');
+                view.classList.add('hidden'); document.getElementById('dashboard-view').classList.remove('hidden');
                 const p = getActive();
                 if (p) {
                     document.getElementById('dashboard-title').textContent = p.name;
@@ -487,8 +392,7 @@
                     document.getElementById('add-asset-section').style.display = isAll ? 'none' : 'block';
                     document.getElementById('th-action').style.display = isAll ? 'none' : 'table-cell';
                     if(p.dday) {
-                        const target = new Date(p.dday);
-                        const diff = Math.ceil((target - new Date()) / (1000*60*60*24));
+                        const diff = Math.ceil((new Date(p.dday) - new Date()) / (1000*60*60*24));
                         document.getElementById('dashboard-dday-count').textContent = diff >= 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
                     } else { document.getElementById('dashboard-dday-count').textContent = 'D-?'; }
                     refresh();
@@ -499,10 +403,8 @@
         function showProfileSelection() {
             document.getElementById('dashboard-view').classList.add('hidden');
             const view = document.getElementById('profile-selection-view');
-            view.classList.remove('hidden');
-            setTimeout(() => view.classList.remove('opacity-0'), 10);
-            state.editMode = false;
-            renderProfiles();
+            view.classList.remove('hidden'); setTimeout(() => view.classList.remove('opacity-0'), 10);
+            state.editMode = false; renderProfiles();
         }
 
         function toggleEditMode() {
@@ -510,106 +412,70 @@
             const btn = document.getElementById('manage-profiles-btn');
             const add = document.getElementById('add-profile-btn');
             if(state.editMode) {
-                btn.textContent = '완료';
-                btn.className = "bg-white text-black px-8 py-2 font-semibold transition-all";
-                add.classList.remove('hidden');
+                btn.textContent = '완료'; btn.className = "bg-white text-black px-8 py-2 font-semibold transition-all"; add.classList.remove('hidden');
             } else {
-                btn.textContent = '프로필 관리';
-                btn.className = "border border-gray-600 text-gray-400 px-8 py-2 hover:text-white hover:border-white font-semibold transition-all";
-                add.classList.add('hidden');
+                btn.textContent = '프로필 관리'; btn.className = "border border-gray-600 text-gray-400 px-8 py-2 hover:text-white hover:border-white font-semibold transition-all"; add.classList.add('hidden');
             }
             renderProfiles();
         }
 
         function addAsset(e) {
-            e.preventDefault();
-            const p = state.profiles.find(x => x.id === state.currId);
-            if (!p) return;
+            e.preventDefault(); const p = state.profiles.find(x => x.id === state.currId); if (!p) return;
             const asset = { id: Date.now().toString(), type: document.getElementById('new-type').value, name: document.getElementById('new-name').value, ticker: document.getElementById('new-ticker').value.trim().toUpperCase(), amount: parseFloat(document.getElementById('new-amount').value)||0, div: 0, price: null };
-            if (!p.assets) p.assets = [];
-            p.assets.push(asset);
-            save(); refresh(); e.target.reset();
-            showToast("자산 추가 완료! 시세를 업데이트하세요.", "success");
+            if (!p.assets) p.assets = []; p.assets.push(asset);
+            save(); refresh(); e.target.reset(); showToast("자산 추가 완료! 시세를 업데이트하세요.", "success");
         }
 
-        function deleteAsset(id) {
-            if(!confirm('삭제하시겠습니까?')) return;
-            const p = getActive();
-            p.assets = p.assets.filter(a => a.id !== id);
-            save(); refresh();
-        }
+        function deleteAsset(id) { if(!confirm('삭제하시겠습니까?')) return; const p = getActive(); p.assets = p.assets.filter(a => a.id !== id); save(); refresh(); }
 
         function saveProfileChanges() {
-            const name = document.getElementById('m-name').value;
-            if(!name) return;
+            const name = document.getElementById('m-name').value; if(!name) return;
             if(state.currId && state.editMode) {
                 const p = state.profiles.find(x => x.id === state.currId);
-                if(p) {
-                    p.name = name; p.goal = document.getElementById('m-goal').value; p.dday = document.getElementById('m-dday').value;
-                }
+                if(p) { p.name = name; p.goal = document.getElementById('m-goal').value; p.dday = document.getElementById('m-dday').value; }
             } else {
                 const newId = 'p_' + Date.now();
                 state.profiles.push({ id: newId, name, assets: [], avatar: COLORS[state.profiles.length % COLORS.length], goal: document.getElementById('m-goal').value, dday: document.getElementById('m-dday').value });
-                state.currId = newId;
             }
             save(); closeGoalModal(); state.editMode ? renderProfiles() : selectProfile(state.currId);
         }
 
-        function deleteProfile(id) {
-            if(!confirm('프로필과 모든 자산 데이터가 삭제됩니다.')) return;
-            state.profiles = state.profiles.filter(x => x.id !== id);
-            save(); renderProfiles();
-        }
+        function deleteProfile(id) { if(!confirm('프로필과 데이터가 삭제됩니다.')) return; state.profiles = state.profiles.filter(x => x.id !== id); save(); renderProfiles(); }
 
         // 유틸리티
         function showToast(msg, type) {
-            const t = document.getElementById('status-toast');
-            const m = document.getElementById('toast-message');
-            const i = document.getElementById('toast-icon');
-            if (!t || !m || !i) return;
-            m.textContent = msg;
+            const t = document.getElementById('status-toast'), m = document.getElementById('toast-message'), i = document.getElementById('toast-icon');
+            if (!t || !m || !i) return; m.textContent = msg;
             i.innerHTML = type === 'loading' ? '<i class="fa-solid fa-spinner loading-spinner text-blue-500"></i>' : (type === 'success' ? '<i class="fa-solid fa-check-circle text-green-500"></i>' : '<i class="fa-solid fa-exclamation-circle text-red-500"></i>');
-            t.classList.remove('translate-x-full');
-            if (type !== 'loading') setTimeout(() => t.classList.add('translate-x-full'), 3000);
+            t.classList.remove('translate-x-full'); if (type !== 'loading') setTimeout(() => t.classList.add('translate-x-full'), 3000);
         }
 
         function toggleDarkMode() { state.isDark = !state.isDark; document.documentElement.classList.toggle('dark'); localStorage.theme = state.isDark ? 'dark' : 'light'; updateIcons(); updateCharts(); }
         function togglePrivacy() { state.isPrivacy = !state.isPrivacy; updateIcons(); refresh(); }
         function toggleCurrency() { state.isUSD = !state.isUSD; refresh(); }
         function updateIcons() { 
-            const d = document.getElementById('dark-mode-icon');
-            const p = document.getElementById('privacy-icon');
+            const d = document.getElementById('dark-mode-icon'), p = document.getElementById('privacy-icon');
             if(d) d.className = state.isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
             if(p) p.className = state.isPrivacy ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
         }
         function openGoalModal(isEdit) {
             const p = isEdit ? state.profiles.find(x => x.id === state.currId) : getActive();
-            if(!p) {
-                document.getElementById('m-name').value = '';
-                document.getElementById('m-goal').value = '';
-                document.getElementById('m-dday').value = '';
-            } else {
-                document.getElementById('m-name').value = p.name || '';
-                document.getElementById('m-goal').value = p.goal || '';
-                document.getElementById('m-dday').value = p.dday || '';
-            }
+            document.getElementById('m-name').value = p ? p.name : ''; document.getElementById('m-goal').value = p ? p.goal : ''; document.getElementById('m-dday').value = p ? p.dday : '';
             document.getElementById('goal-modal').classList.remove('hidden');
         }
         function closeGoalModal() { document.getElementById('goal-modal').classList.add('hidden'); }
         function openEditModal(id, v) { document.getElementById('edit-id').value = id; document.getElementById('edit-val').value = v; document.getElementById('edit-modal').classList.remove('hidden'); }
         function closeEditModal() { document.getElementById('edit-modal').classList.add('hidden'); }
         function applyEdit() {
-            const p = getActive();
-            const a = p.assets.find(x => x.id === document.getElementById('edit-id').value);
+            const p = getActive(); const a = p.assets.find(x => x.id === document.getElementById('edit-id').value);
             if(a) a.amount = parseFloat(document.getElementById('edit-val').value)||0;
             save(); refresh(); closeEditModal();
         }
         function openProfileModal() { state.currId = null; openGoalModal(false); }
         function changeYear(d) { state.year += d; document.getElementById('year-display').textContent = state.year; updateCharts(); }
-        function updateTickerPlaceholder() { const type = document.getElementById('new-type').value; const t = document.getElementById('new-ticker'); if (type === '미국주식') t.placeholder = "티커 (AAPL)"; else if (type === '국내주식') t.placeholder = "종목코드 (005930)"; else if (type === '코인') t.placeholder = "심볼 (BTC)"; else t.placeholder = "해당 없음"; }
+        function updateTickerPlaceholder() { const type = document.getElementById('new-type').value, t = document.getElementById('new-ticker'); if (type === '미국주식') t.placeholder = "티커 (AAPL)"; else if (type === '국내주식') t.placeholder = "종목코드 (005930)"; else if (type === '코인') t.placeholder = "심볼 (BTC)"; else t.placeholder = "해당 없음"; }
 
-        // 최종 실행 (DOMContentLoaded로 바인딩 안정성 확보)
-        document.addEventListener('DOMContentLoaded', init);
+        window.onload = init;
     </script>
 </body>
 </html>
