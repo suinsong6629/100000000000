@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>가족 통합 자산 대시보드</title>
-    <!-- 외부 라이브러리 링크 정상화 -->
+    <!-- 라이브러리 링크 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,7 +30,7 @@
         .transition-all { transition: all 0.3s ease; }
         .loading-spinner { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        /* 클릭 방해 요소 제거를 위한 포인터 이벤트 제어 */
+        /* 클릭 방해 요소 제거 */
         #status-toast { pointer-events: none; }
         #status-toast > div { pointer-events: auto; }
     </style>
@@ -45,7 +45,7 @@
         </div>
     </div>
 
-    <!-- [뷰 1] 프로필 선택 화면 (넷플릭스 스타일) -->
+    <!-- [뷰 1] 프로필 선택 화면 -->
     <div id="profile-selection-view" class="fixed inset-0 bg-darkBg text-white flex flex-col items-center justify-center z-50 transition-opacity duration-500">
         <h1 class="text-3xl md:text-5xl font-bold mb-12 tracking-tight">누구의 자산을 관리할까요?</h1>
         <div id="profiles-container" class="flex flex-wrap justify-center gap-8 max-w-5xl px-6"></div>
@@ -124,4 +124,180 @@
                     <div class="h-32"><canvas id="dividendChart"></canvas></div>
                     <div class="mt-4 text-center">
                         <p class="text-xs text-gray-500 mb-1">연간 배당금 총계</p>
-                        <p id="total-dividend-value" class="text-xl font-black text-indigo-600 dark:text-indigo-4
+                        <p id="total-dividend-value" class="text-xl font-black text-indigo-600 dark:text-indigo-400">₩0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 보유 자산 목록 -->
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div class="p-8 border-b border-gray-50 dark:border-gray-700 flex flex-col md:flex-row justify-between gap-4">
+                    <h3 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-list-ul text-blue-500"></i> 상세 자산 내역</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-50 dark:border-gray-700">
+                                <th class="px-8 py-4">자산명 (티커)</th><th class="px-8 py-4">분류</th><th class="px-8 py-4 text-right">수량</th><th class="px-8 py-4 text-right">현재가</th><th class="px-8 py-4 text-right">연배당금(주당)</th><th class="px-8 py-4 text-right">평가액</th><th id="th-action" class="px-8 py-4 text-center">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="asset-list-body" class="divide-y divide-gray-50 dark:divide-gray-700"></tbody>
+                    </table>
+                </div>
+                <div id="add-asset-section" class="p-8 bg-gray-50/50 dark:bg-gray-900/20">
+                    <form onsubmit="addAsset(event)" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <select id="new-type" required onchange="updateTickerPlaceholder()" class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                            <option value="미국주식">미국주식 (Ticker)</option>
+                            <option value="국내주식">국내주식 (종목명/코드)</option>
+                            <option value="ISA">ISA (KRW)</option>
+                            <option value="코인">코인 (Symbol)</option>
+                            <option value="금(돈)">금(돈) (KRW)</option>
+                            <option value="가용현금(원화)">가용현금(원화)</option>
+                            <option value="가용현금(달러)">가용현금(달러)</option>
+                            <option value="보험">보험 (KRW)</option>
+                        </select>
+                        <input type="text" id="new-name" placeholder="자산명" required class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <input type="text" id="new-ticker" placeholder="티커 (예: AAPL)" class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <input type="number" id="new-amount" step="any" placeholder="수량/금액" required class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-lg shadow-indigo-200 dark:shadow-none">추가</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 모달 -->
+    <div id="goal-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-md shadow-2xl">
+            <h3 class="text-2xl font-bold mb-6 dark:text-white">프로필 및 목표 편집</h3>
+            <div class="space-y-5">
+                <div><label class="block text-xs font-bold text-gray-400 mb-2 uppercase">프로필 이름</label><input type="text" id="m-name" class="w-full p-3 rounded-xl border border-gray-200 dark:bg-gray-700 dark:border-gray-600"></div>
+                <div><label class="block text-xs font-bold text-gray-400 mb-2 uppercase">재무 목표</label><input type="text" id="m-goal" class="w-full p-3 rounded-xl border border-gray-200 dark:bg-gray-700 dark:border-gray-600"></div>
+                <div><label class="block text-xs font-bold text-gray-400 mb-2 uppercase">목표 날짜</label><input type="date" id="m-dday" class="w-full p-3 rounded-xl border border-gray-200 dark:bg-gray-700 dark:border-gray-600"></div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8">
+                <button onclick="closeGoalModal()" class="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 font-bold transition">취소</button>
+                <button onclick="saveProfileChanges()" class="px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-lg transition hover:bg-indigo-700">저장하기</button>
+            </div>
+        </div>
+    </div>
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+            <h3 class="text-2xl font-bold mb-6 dark:text-white">수량 수정</h3>
+            <input type="hidden" id="edit-id">
+            <input type="number" id="edit-val" step="any" class="w-full p-4 rounded-xl border border-gray-200 dark:bg-gray-700 dark:border-gray-600 text-2xl font-bold mb-6">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 font-bold transition">취소</button>
+                <button onclick="applyEdit()" class="px-6 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg transition hover:bg-blue-700">수정 완료</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API 및 설정
+        const apiKey = ""; 
+        const EX_RATE = 1350;
+        const COLORS = ['bg-blue-500', 'bg-red-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-indigo-500'];
+        
+        let state = {
+            profiles: [],
+            currId: null,
+            isDark: false,
+            isPrivacy: false,
+            isUSD: false,
+            year: new Date().getFullYear(),
+            editMode: false,
+            isUpdating: false
+        };
+
+        let allocChart = null;
+        let divChart = null;
+
+        // 1. 초기화
+        function init() {
+            try {
+                const saved = localStorage.getItem('familyProfilesLocal');
+                if (saved && saved !== "undefined") {
+                    state.profiles = JSON.parse(saved) || [];
+                }
+                
+                if (!state.profiles || state.profiles.length === 0) {
+                    state.profiles = [{ id: 'p_main', name: '나', avatar: 'bg-indigo-600', goal: '경제적 자유', dday: '2030-12-31', assets: [] }];
+                    save();
+                }
+
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    state.isDark = true;
+                    document.documentElement.classList.add('dark');
+                }
+                updateIcons();
+                renderProfiles();
+            } catch (e) {
+                console.error("Init Error:", e);
+                localStorage.removeItem('familyProfilesLocal');
+                location.reload();
+            }
+        }
+
+        function save() {
+            localStorage.setItem('familyProfilesLocal', JSON.stringify(state.profiles));
+        }
+
+        // 2. 실시간 시세 업데이트 (Gemini API 2.5 Flash 최적화)
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return response;
+                    if (response.status === 429) { /* Rate limit: wait and retry */ }
+                    else {
+                        const err = await response.json();
+                        throw new Error(err.error?.message || `Status ${response.status}`);
+                    }
+                } catch (e) { if (i === maxRetries - 1) throw e; }
+                await new Promise(r => setTimeout(r, delay));
+                delay *= 2;
+            }
+        }
+
+        async function updateAllPrices() {
+            if (state.isUpdating) return;
+            const p = getActive();
+            if (!p || p.id === 'all') return;
+            const targets = (p.assets || []).filter(a => ['미국주식', '국내주식', '코인'].includes(a.type) && a.ticker);
+            
+            if (targets.length === 0) { showToast("업데이트할 티커(Ticker) 자산이 없습니다.", "info"); return; }
+            
+            state.isUpdating = true; 
+            showToast("실시간 시세를 조회하는 중...", "loading");
+            const btn = document.getElementById('refresh-prices-btn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner loading-spinner"></i> 조회 중...`;
+
+            try {
+                const tickers = targets.map(a => `${a.type}: ${a.ticker}`).join(', ');
+                const userQuery = `다음 티커의 현재 가격(price)과 주당 연간 배당금(dividend)을 JSON으로 알려줘: ${tickers}. 미국주식은 USD, 국내/코인은 KRW 기준. 응답은 오직 순수 JSON만 반환해: {"TICKER": {"price": 숫자, "dividend": 숫자}}`;
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                const response = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        systemInstruction: { parts: [{ text: "당신은 금융 데이터 전문가입니다. 어떤 설명도 하지 말고 요청한 형식의 JSON 데이터만 반환하십시오. 마크다운 기호(```)를 쓰지 마십시오." }] },
+                        tools: [{ "google_search": {} }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+                const dataMap = JSON.parse(text.replace(/```json|```/g, '').trim());
+                
+                targets.forEach(a => {
+                    const info = dataMap[a.ticker] || dataMap[a.ticker.toUpperCase()];
+                    if (info) { 
+                        a.price = parseFloat(info.price) || a.price; 
+                        a.div = parseFloat(info.dividend) || 0;
