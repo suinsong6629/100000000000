@@ -158,7 +158,7 @@
                         </select>
                         <input type="text" id="new-name" placeholder="자산명" required class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                         <input type="text" id="new-ticker" placeholder="티커 (예: AAPL)" class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                        <input type="number" id="new-amount" step="any" placeholder="수량/금액" required class="p-3 rounded-xl border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        <input type="number" id="new-amount" step="any" placeholder="수량/금액" required class="p-3 rounded-xl border border-gray-200 dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 outline-none transition">
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-lg shadow-indigo-200 dark:shadow-none">추가</button>
                     </form>
                 </div>
@@ -213,7 +213,7 @@
         let allocChart = null;
         let divChart = null;
 
-        // 1. 초기화 (안정성 보강)
+        // 1. 초기화 (안정성 보강 및 리스너 분리)
         function init() {
             try {
                 const saved = localStorage.getItem('familyProfilesLocal');
@@ -246,16 +246,17 @@
             localStorage.setItem('familyProfilesLocal', JSON.stringify(state.profiles));
         }
 
-        // 2. 실시간 시세 업데이트 (Gemini API 2.5 Flash 규격 준수)
+        // 2. 실시간 시세 업데이트 (Gemini API 2.5 Flash 규격 및 파싱 강화)
         async function fetchWithRetry(url, options, maxRetries = 5) {
             let delay = 1000;
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const response = await fetch(url, options);
                     if (response.ok) return response;
-                    if (response.status !== 429 && response.status < 500) {
-                        const errBody = await response.json().catch(() => ({}));
-                        throw new Error(errBody.error?.message || `API Error ${response.status}`);
+                    if (response.status === 429) { /* Rate limit */ }
+                    else {
+                        const err = await response.json();
+                        throw new Error(err.error?.message || `Status ${response.status}`);
                     }
                 } catch (err) { if (i === maxRetries - 1) throw err; }
                 await new Promise(res => setTimeout(res, delay));
@@ -269,18 +270,22 @@
             if (!p || p.id === 'all') return;
             const targets = (p.assets || []).filter(a => ['미국주식', '국내주식', '코인'].includes(a.type) && a.ticker);
             
-            if (targets.length === 0) { showToast("업데이트할 티커(Ticker)가 있는 자산이 없습니다.", "info"); return; }
+            if (targets.length === 0) { showToast("업데이트할 티커(Ticker) 자산이 없습니다.", "info"); return; }
             if (!apiKey) { showToast("API 키가 설정되지 않았습니다.", "error"); return; }
 
             state.isUpdating = true; 
-            showToast("실시간 정보를 조회하는 중...", "loading");
+            showToast("실시간 시세를 조회하는 중...", "loading");
             const btn = document.getElementById('refresh-prices-btn');
             const originalHtml = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner loading-spinner"></i> 조회 중...`;
 
             try {
-                const tickers = targets.map(a => `${a.type}: ${a.ticker}`).join(', ');
-                const userQuery = `Find market price and annual dividend for: ${tickers}. US Stocks(USD), KR Stocks/Coins(KRW). RETURN ONLY RAW JSON: {"TICKER": {"price": number, "dividend": number}}. No text, no markdown.`;
+                const tickers = targets.map(a => `${a.type} 티커 ${a.ticker}`).join(', ');
+                const userQuery = `Find current market price and annual total dividend per share for these tickers: ${tickers}. 
+                                   Rules: 1. US Stocks in USD, others in KRW. 
+                                   2. Return ONLY a single JSON object. 
+                                   Format: {"TICKER_ID": {"price": number, "dividend": number}}. 
+                                   Use the exact ticker provided as the key. No explanations.`;
 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 
@@ -289,23 +294,29 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: userQuery }] }],
-                        systemInstruction: { parts: [{ text: "당신은 금융 데이터 전문가입니다. 설명 없이 요청한 JSON 구조만 출력하십시오. 마크다운 백틱(```)을 절대 포함하지 마십시오." }] },
                         tools: [{ "google_search": {} }],
                         generationConfig: { responseMimeType: "application/json" }
                     })
                 });
 
                 const result = await response.json();
-                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!responseText) throw new Error("데이터를 가져오지 못했습니다.");
+                let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("API 응답이 비어있습니다.");
 
-                // 불필요한 텍스트 제거 및 파싱
-                const cleanedJson = responseText.replace(/```json|```/g, '').trim();
-                const dataMap = JSON.parse(cleanedJson);
+                // 마크다운 백틱 제거 및 유연한 파싱
+                const cleanedText = text.replace(/```json|```/g, '').trim();
+                const dataMap = JSON.parse(cleanedText);
                 
                 let successCount = 0;
                 targets.forEach(a => {
-                    const info = dataMap[a.ticker] || dataMap[a.ticker.toUpperCase()];
+                    // 키 매칭 시 대소문자 무시 및 포함 여부 확인 (매우 견고한 매핑)
+                    const tickerKey = Object.keys(dataMap).find(k => 
+                        k.toUpperCase() === a.ticker.toUpperCase() || 
+                        k.toUpperCase().includes(a.ticker.toUpperCase()) || 
+                        a.ticker.toUpperCase().includes(k.toUpperCase())
+                    );
+                    
+                    const info = dataMap[tickerKey];
                     if (info) { 
                         a.price = parseFloat(info.price) || a.price; 
                         a.div = parseFloat(info.dividend) || 0; 
@@ -313,9 +324,11 @@
                     }
                 });
 
+                if (successCount === 0) throw new Error("유효한 시세 데이터를 찾지 못했습니다.");
+
                 save(); 
                 refresh(); 
-                showToast(`${successCount}건 업데이트 완료!`, "success");
+                showToast(`${successCount}건 시세 업데이트 완료!`, "success");
             } catch (err) {
                 console.error("API Error:", err);
                 showToast(`실패: ${err.message}`, "error");
@@ -415,7 +428,7 @@
                     <td class="px-8 py-5 text-right font-bold">${state.isPrivacy ? '****' : priceText}</td>
                     <td class="px-8 py-5 text-right text-xs text-green-600 font-bold">${state.isPrivacy ? '****' : (parseFloat(a.div)||0).toLocaleString()}</td>
                     <td class="px-8 py-5 text-right font-black text-indigo-600">${fmt(val(a))}</td>
-                    ${p.id==='all'?'':`<td class="px-8 py-5"><div class="flex justify-center gap-3"><button onclick="openEditModal('${a.id}', ${a.amount})" class="text-gray-400 hover:text-blue-500"><i class="fa-solid fa-pen"></i></button><button onclick="deleteAsset('${a.id}')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></div></td>`}
+                    ${p.id==='all'?'':`<td class="px-8 py-5"><div class="flex justify-center gap-3"><button onclick="openEditModal('${a.id}', ${a.amount})" class="text-gray-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button><button onclick="deleteAsset('${a.id}')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></div></td>`}
                 `;
                 body.appendChild(tr);
             });
@@ -595,8 +608,8 @@
         function changeYear(d) { state.year += d; document.getElementById('year-display').textContent = state.year; updateCharts(); }
         function updateTickerPlaceholder() { const type = document.getElementById('new-type').value; const t = document.getElementById('new-ticker'); if (type === '미국주식') t.placeholder = "티커 (AAPL)"; else if (type === '국내주식') t.placeholder = "종목코드 (005930)"; else if (type === '코인') t.placeholder = "심볼 (BTC)"; else t.placeholder = "해당 없음"; }
 
-        // 최종 실행
-        window.onload = init;
+        // 최종 실행 (DOMContentLoaded로 바인딩 안정성 확보)
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
