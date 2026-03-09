@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>가족 통합 자산 대시보드</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -23,7 +23,7 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap)');
         body { font-family: 'Inter', sans-serif; }
         .profile-card:hover .profile-img { outline: 3px solid white; transform: scale(1.05); }
         .transition-all { transition: all 0.3s ease; }
@@ -165,7 +165,7 @@
         </main>
     </div>
 
-    <!-- 모달: 목표/프로필 설정 -->
+    <!-- 모달 -->
     <div id="goal-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-md shadow-2xl">
             <h3 class="text-2xl font-bold mb-6 dark:text-white">프로필 및 목표 편집</h3>
@@ -180,8 +180,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 모달: 수량 수정 -->
     <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-sm shadow-2xl">
             <h3 class="text-2xl font-bold mb-6 dark:text-white">수량 수정</h3>
@@ -227,7 +225,6 @@
                     save();
                 }
 
-                // 다크모드 설정
                 if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     state.isDark = true;
                     document.documentElement.classList.add('dark');
@@ -236,7 +233,6 @@
                 renderProfiles();
             } catch (e) {
                 console.error("Init Error:", e);
-                // 오류 발생 시 데이터 초기화 후 재시도
                 localStorage.removeItem('familyProfilesLocal');
                 location.reload();
             }
@@ -246,16 +242,16 @@
             localStorage.setItem('familyProfilesLocal', JSON.stringify(state.profiles));
         }
 
-        // 2. 실시간 시세 업데이트 (Gemini API)
+        // 2. 실시간 시세 업데이트 (Gemini API) - 수정 및 보강
         async function fetchWithRetry(url, options, maxRetries = 5) {
             let delay = 1000;
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const response = await fetch(url, options);
                     if (response.ok) return response;
+                    const errorBody = await response.json().catch(() => ({}));
                     if (response.status !== 429 && response.status < 500) {
-                        const errorBody = await response.json();
-                        throw new Error(errorBody.error?.message || "API Error");
+                        throw new Error(errorBody.error?.message || `API Error ${response.status}`);
                     }
                 } catch (err) { if (i === maxRetries - 1) throw err; }
                 await new Promise(res => setTimeout(res, delay));
@@ -269,16 +265,25 @@
             if (!p || p.id === 'all') return;
             const targets = (p.assets || []).filter(a => ['미국주식', '국내주식', '코인'].includes(a.type) && a.ticker);
             
-            if (targets.length === 0) { showToast("업데이트할 자산이 없습니다.", "info"); return; }
+            if (targets.length === 0) { showToast("업데이트할 티커(Ticker)가 있는 자산이 없습니다.", "info"); return; }
+            
             state.isUpdating = true; 
-            showToast("시세 정보를 불러오는 중...", "loading");
+            showToast("실시간 시세를 조회하는 중...", "loading");
             const btn = document.getElementById('refresh-prices-btn');
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner loading-spinner"></i> 업데이트 중...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner loading-spinner"></i> 조회 중...`;
 
             try {
                 const tickers = targets.map(a => `${a.type}: ${a.ticker}`).join(', ');
-                const userQuery = `Get current market price and annual dividend per share for: ${tickers}. US Stocks (USD), KR Stocks/Coins (KRW). Return ONLY JSON: {"TICKER": {"price": number, "dividend": number}}`;
+                // AI에게 응답 형식을 더 엄격하게 지시
+                const userQuery = `Find the current real-time market price and annual dividend per share for: ${tickers}. 
+                                   Rules: 
+                                   1. US Stocks in USD. 
+                                   2. KR Stocks and Coins in KRW. 
+                                   3. Return ONLY a raw JSON object. 
+                                   Format: {"TICKER_NAME": {"price": number, "dividend": number}}. 
+                                   No markdown, no backticks, no explanations.`;
+
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 
                 const response = await fetchWithRetry(url, {
@@ -287,22 +292,39 @@
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: userQuery }] }],
                         tools: [{ "google_search": {} }],
-                        generationConfig: { responseMimeType: "application/json" }
+                        generationConfig: { 
+                            responseMimeType: "application/json"
+                        }
                     })
                 });
 
                 const result = await response.json();
-                const dataMap = JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text || "{}");
+                let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
                 
+                // 마크다운 태그가 섞여 들어올 경우를 대비한 정제 (정규식 추출)
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) text = jsonMatch[0];
+
+                const dataMap = JSON.parse(text);
+                
+                let updatedCount = 0;
                 targets.forEach(a => {
-                    const info = dataMap[a.ticker];
-                    if (info) { a.price = info.price || a.price; a.div = info.dividend || 0; }
+                    const info = dataMap[a.ticker] || dataMap[a.ticker.toUpperCase()] || Object.values(dataMap).find((v, i) => Object.keys(dataMap)[i].includes(a.ticker));
+                    if (info) { 
+                        a.price = parseFloat(info.price) || a.price; 
+                        a.div = parseFloat(info.dividend) || 0; 
+                        updatedCount++;
+                    }
                 });
 
-                save(); refresh(); showToast("업데이트 완료!", "success");
+                if (updatedCount === 0) throw new Error("일치하는 시세 정보를 찾지 못했습니다. 티커를 확인하세요.");
+
+                save(); 
+                refresh(); 
+                showToast(`${updatedCount}건의 시세 업데이트 완료!`, "success");
             } catch (err) {
-                console.error(err);
-                showToast(`오류: ${err.message}`, "error");
+                console.error("Update Failure:", err);
+                showToast(`실패: ${err.message}`, "error");
             } finally {
                 state.isUpdating = false;
                 btn.innerHTML = originalHtml;
@@ -470,7 +492,7 @@
             view.classList.remove('hidden');
             setTimeout(() => view.classList.remove('opacity-0'), 10);
             state.editMode = false;
-            toggleEditMode(); // UI 동기화
+            toggleEditMode();
             toggleEditMode();
         }
 
@@ -494,7 +516,7 @@
             e.preventDefault();
             const p = state.profiles.find(x => x.id === state.currId);
             if (!p) return;
-            const asset = { id: Date.now().toString(), type: document.getElementById('new-type').value, name: document.getElementById('new-name').value, ticker: document.getElementById('new-ticker').value.toUpperCase(), amount: parseFloat(document.getElementById('new-amount').value)||0, div: 0, price: null };
+            const asset = { id: Date.now().toString(), type: document.getElementById('new-type').value, name: document.getElementById('new-name').value, ticker: document.getElementById('new-ticker').value.trim().toUpperCase(), amount: parseFloat(document.getElementById('new-amount').value)||0, div: 0, price: null };
             if (!p.assets) p.assets = [];
             p.assets.push(asset);
             save(); refresh(); e.target.reset();
